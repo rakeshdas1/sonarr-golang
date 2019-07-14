@@ -36,13 +36,16 @@ type season struct {
 }
 type Client struct {
 	httpClient *http.Client
-	BaseURL    *url.URL
+	BaseURL    string
 	APIKey     string
 }
 
 func (c *Client) MakeRequest(url string) ([]byte, error) {
 	fmt.Println("Making the get req to " + url)
 	req, err := http.NewRequest("GET", url, nil)
+
+	// set the api key in the request header
+	req.Header.Set("X-Api-Key", c.APIKey)
 	if err != nil {
 		return nil, err
 	}
@@ -55,13 +58,15 @@ func (c *Client) MakeRequest(url string) ([]byte, error) {
 
 var APIKEY = "4399fb75326b41bb8422e1731046f157"
 var APIBaseURL = "http://192.168.1.150:8989/"
-var APISysStatusPath = "api/system/status"
 
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
 	}
-	return &Client{httpClient: httpClient}
+	return &Client{
+		httpClient: httpClient,
+		APIKey:     APIKEY,
+		BaseURL:    APIBaseURL}
 }
 
 func doReq(req *http.Request, client *http.Client) ([]byte, error) {
@@ -85,13 +90,8 @@ func (c *Client) getAllSeries() ([]series, error) {
 	//container for all the series objs
 	var seriesArr []series
 	//construct request url
-	u, _ := url.ParseRequestURI(APIBaseURL)
-	u.Path = APISeriesPath
-	// u.Path = path.Join(APISeriesPath, "4")
-	que := u.Query()
-	que.Set("apikey", APIKEY)
-	u.RawQuery = que.Encode()
-	resp, err := c.MakeRequest(u.String())
+	reqURL := c.constructAPIRequestURL(APISeriesPath)
+	resp, err := c.MakeRequest(reqURL)
 	if err != nil {
 		return nil, err
 	}
@@ -103,57 +103,30 @@ func (c *Client) getSeriesByID(seriesID int) (*series, error) {
 
 	//container for the returned series obj
 	var returnedSeries *series
-
-	u, _ := url.ParseRequestURI(APIBaseURL)
-	u.Path = APISeriesPath + "/" + strconv.Itoa(seriesID)
-	que := u.Query()
-	que.Set("apikey", APIKEY)
-	u.RawQuery = que.Encode()
-	resp, err := c.MakeRequest(u.String())
+	reqURL := c.constructAPIRequestURL(APISeriesPath + "/" + strconv.Itoa(seriesID))
+	resp, err := c.MakeRequest(reqURL)
 	if err != nil {
 		return nil, err
 	}
 	err = json.Unmarshal([]byte(resp), &returnedSeries)
 	return returnedSeries, nil
 }
+
+func (c *Client) constructAPIRequestURL(endpoint string) (apiReqURL string) {
+	u, _ := url.ParseRequestURI(c.BaseURL)
+	u.Path = endpoint
+	return u.String()
+}
+
 func main() {
-	//construct request url
-	u, _ := url.ParseRequestURI(APIBaseURL)
-	u.Path = APISysStatusPath
-	que := u.Query()
-	que.Set("apikey", APIKEY)
-	u.RawQuery = que.Encode()
-	//current url str
-	urlStr := u.String()
-
-	fmt.Println(urlStr)
-
 	//make http client to execute the request
 	client := &http.Client{}
 
-	//request obj
-	req, _ := http.NewRequest("GET", urlStr, nil)
-	//execute the request and get a response back
-	resp, _ := client.Do(req)
-
-	fmt.Println(resp.Status)
-	// defer resp.Body.Close()
-
-	//read in the req
-	r, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	var data *sysStatus
-	err = json.Unmarshal(r, &data)
-	fmt.Printf("%+v\n", data)
-
-	var requestHandler = NewClient(client)
+	requestHandler := NewClient(client)
 
 	returnedData, _ := requestHandler.getAllSeries()
 	fmt.Println(returnedData)
 
-	returnedSeries, _ := requestHandler.getSeriesByID(50)
+	returnedSeries, _ := requestHandler.getSeriesByID(8)
 	fmt.Printf("%v", returnedSeries)
 }
