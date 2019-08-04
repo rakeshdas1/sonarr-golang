@@ -10,7 +10,7 @@ import (
 )
 
 // makes a GET request to the provided URL
-func (c *Client) MakeRequest(url string) ([]byte, error) {
+func (c *Client) MakeGetRequest(url string) ([]byte, error) {
 	fmt.Println("Making the get req to " + url)
 	req, err := http.NewRequest("GET", url, nil)
 
@@ -62,7 +62,7 @@ func (c *Client) getAllSeries() ([]series, error) {
 	var seriesArr []series
 	//construct request url
 	reqURL := c.constructAPIRequestURL(APISeriesPath)
-	resp, err := c.MakeRequest(reqURL)
+	resp, err := c.MakeGetRequest(reqURL)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (c *Client) getSeriesByID(seriesID int) (*series, error) {
 	//container for the returned series obj
 	var returnedSeries *series
 	reqURL := c.constructAPIRequestURL(APISeriesPath + "/" + strconv.Itoa(seriesID))
-	resp, err := c.MakeRequest(reqURL)
+	resp, err := c.MakeGetRequest(reqURL)
 	if err != nil {
 		return nil, err
 	}
