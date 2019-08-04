@@ -9,37 +9,7 @@ import (
 	"strconv"
 )
 
-//struct for the system status
-type sysStatus struct {
-	Version   string `json:"version"`
-	OsName    string `json:"osName"`
-	OsVersion string `json:"osVersion"`
-}
-
-//struct for a single series listing
-type series struct {
-	Title             string   `json:"title"`
-	SeasonCount       uint8    `json:"seasonCount"`
-	TotalEpisodeCount uint8    `json:"totalEpisodeCount"`
-	EpisodeFileCount  uint8    `json:"episodeFileCount"`
-	Status            string   `json:"status"`
-	Overview          string   `json:"overview"`
-	PreviousAiring    string   `json:"previousAiring"`
-	Network           string   `json:"network"`
-	Seasons           []season `json:"seasons"`
-}
-
-//struct for a single season listing
-type season struct {
-	SeasonNumber uint8  `json:"seasonNumber"`
-	Monitored    string `json:"monitored"`
-}
-type Client struct {
-	httpClient *http.Client
-	BaseURL    string
-	APIKey     string
-}
-
+// makes a GET request to the provided URL
 func (c *Client) MakeRequest(url string) ([]byte, error) {
 	fmt.Println("Making the get req to " + url)
 	req, err := http.NewRequest("GET", url, nil)
@@ -59,6 +29,7 @@ func (c *Client) MakeRequest(url string) ([]byte, error) {
 var APIKEY = "4399fb75326b41bb8422e1731046f157"
 var APIBaseURL = "http://192.168.1.150:8989/"
 
+// NewClient returns a client obj with the apikey and baseurl attached
 func NewClient(httpClient *http.Client) *Client {
 	if httpClient == nil {
 		httpClient = http.DefaultClient
