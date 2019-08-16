@@ -13,12 +13,12 @@ import (
 func (c *Client) MakeGetRequest(url string) ([]byte, error) {
 	fmt.Println("Making the get req to " + url)
 	req, err := http.NewRequest("GET", url, nil)
-
-	// set the api key in the request header
-	req.Header.Set("X-Api-Key", c.APIKey)
 	if err != nil {
 		return nil, err
 	}
+
+	// set the api key in the request header
+	req.Header.Set("X-Api-Key", c.APIKey)
 	resp, err := doReq(req, c.httpClient)
 	if err != nil {
 		return nil, err
@@ -26,6 +26,26 @@ func (c *Client) MakeGetRequest(url string) ([]byte, error) {
 	return resp, err
 }
 
+// makes a POST request to the provided URL with the provided request body
+func (c *Client) MakePostRequest(url string, reqBody []byte) ([]byte, error) {
+	fmt.Println("Making post req to %v, with req body %v", url, reqBody)
+
+	req, err := http.NewRequest("POST", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// set the api key in the request header
+	req.Header.Set("X-Api-Key", c.APIKey)
+
+	resp, err := doReq(req, c.httpClient)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
+// move this to an env var file later
 var APIKEY = "4399fb75326b41bb8422e1731046f157"
 var APIBaseURL = "http://192.168.1.150:8989/"
 
@@ -82,6 +102,20 @@ func (c *Client) getSeriesByID(seriesID int) (*series, error) {
 	err = json.Unmarshal([]byte(resp), &returnedSeries)
 	return returnedSeries, nil
 }
+func (c *Client) searchForSeries(seriesName string) ([]series, error) {
+	var APISeriesSearchPath = "api/series/lookup?"
+
+	// container for returned series objs
+	var returnedSearchResults []series
+	reqURL := c.constructAPIRequestURL(APISeriesSearchPath + "term=" + url.QueryEscape(seriesName))
+
+	resp, err := c.MakeGetRequest(reqURL)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(resp), &returnedSearchResults)
+	return returnedSearchResults, nil
+}
 
 func (c *Client) constructAPIRequestURL(endpoint string) (apiReqURL string) {
 	u, _ := url.ParseRequestURI(c.BaseURL)
@@ -95,9 +129,12 @@ func main() {
 
 	requestHandler := NewClient(client)
 
-	returnedData, _ := requestHandler.getAllSeries()
+	/* returnedData, _ := requestHandler.getAllSeries()
 	fmt.Println(returnedData)
 
 	returnedSeries, _ := requestHandler.getSeriesByID(8)
-	fmt.Printf("%v", returnedSeries)
+	fmt.Printf("%v", returnedSeries) */
+
+	returnedSearchResults, _ := requestHandler.searchForSeries("Brooklyn nine nine")
+	fmt.Printf("+v", returnedSearchResults)
 }
