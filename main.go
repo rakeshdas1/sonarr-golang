@@ -117,6 +117,22 @@ func (c *Client) searchForSeries(seriesName string) ([]series, error) {
 	return returnedSearchResults, nil
 }
 
+func (c *Client) getEpisodesBySeriesID(seriesID int) ([]episode, error) {
+	var apiEpisodePath = "api/episode?"
+
+	// container for returned episode objs
+	var returnedEpisodeResults []episode
+
+	reqURL := c.constructAPIRequestURL(apiEpisodePath + "seriesId=" + strconv.Itoa(seriesID))
+
+	resp, err := c.MakeGetRequest(reqURL)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(resp), &returnedEpisodeResults)
+	return returnedEpisodeResults, nil
+}
+
 func (c *Client) constructAPIRequestURL(endpoint string) (apiReqURL string) {
 	u, _ := url.ParseRequestURI(c.BaseURL)
 	u.Path = endpoint
@@ -135,6 +151,6 @@ func main() {
 	returnedSeries, _ := requestHandler.getSeriesByID(8)
 	fmt.Printf("%v", returnedSeries) */
 
-	returnedSearchResults, _ := requestHandler.searchForSeries("Brooklyn nine nine")
-	fmt.Printf("+v", returnedSearchResults)
+	returnedEpisodeResults, _ := requestHandler.getEpisodesBySeriesID(11)
+	fmt.Printf("+v", returnedEpisodeResults)
 }
