@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"github.com/rakeshdas1/sonarr-golang/models"
 )
 
 // makes a GET request to the provided URL
