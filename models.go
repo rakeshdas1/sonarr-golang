@@ -20,14 +20,25 @@ type series struct {
 	PreviousAiring    string   `json:"previousAiring"`
 	Network           string   `json:"network"`
 	Seasons           []season `json:"seasons"`
+	ID uint8 `json:"id"`
 }
 
 // struct for a single season listing
 type season struct {
 	SeasonNumber uint8  `json:"seasonNumber"`
 	Monitored    string `json:"monitored"`
+	Statistics statistics `json:"statistics"`
 }
 
+// struct for stats obj found in season listing
+type statistics struct {
+	PreviousAiring    string `json:"previousAiring"`
+	EpisodeFileCount  int       `json:"episodeFileCount"`
+	EpisodeCount      int       `json:"episodeCount"`
+	TotalEpisodeCount int       `json:"totalEpisodeCount"`
+	SizeOnDisk        int64     `json:"sizeOnDisk"`
+	PercentOfEpisodes int       `json:"percentOfEpisodes"`
+}
 // struct for episode listing
 type episode struct {
 	SeriesID              int    `json:"seriesId"`
