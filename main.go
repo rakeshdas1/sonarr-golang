@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/jroimartin/gocui"
 )
 
 // makes a GET request to the provided URL
@@ -139,6 +141,42 @@ func (c *Client) constructAPIRequestURL(endpoint string) (apiReqURL string) {
 	return u.String()
 }
 
+// layout func for gocui
+func layout(g *gocui.Gui) error {
+	maxX, maxY := g.Size()
+	fmt.Printf("maxes: (%v, %v)", maxX, maxY)
+	if v, err := g.SetView("shows", -1, -1, 50, maxY); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Highlight = true
+		v.SelBgColor = gocui.ColorBlue
+		v.SelFgColor = gocui.ColorBlack
+		if seriesList != nil {
+			for _, currSeries := range seriesList {
+				fmt.Fprintln(v, currSeries.Title)
+				fmt.Fprintln(v, "Item")
+			}
+		}
+	}
+	return nil
+}
+
+// keybindings for gocui
+func keybindingsCui(g *gocui.Gui) error {
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quitCui); err != nil {
+		return err
+	}
+	return nil
+}
+
+// quit func for gocui
+func quitCui(g *gocui.Gui, v *gocui.View) error {
+	return gocui.ErrQuit
+}
+
+var seriesList []series
+
 func main() {
 	//make http client to execute the request
 	client := &http.Client{}
@@ -151,6 +189,27 @@ func main() {
 	returnedSeries, _ := requestHandler.getSeriesByID(8)
 	fmt.Printf("%v", returnedSeries) */
 
-	returnedEpisodeResults, _ := requestHandler.getEpisodesBySeriesID(11)
-	fmt.Printf("+v", returnedEpisodeResults)
+	seriesList, _ := requestHandler.getAllSeries()
+	// print the titles
+	for _, currSeries := range seriesList {
+		fmt.Println(currSeries.Title)
+	}
+
+	g, err := gocui.NewGui(gocui.OutputNormal)
+	if err != nil {
+		panic(err)
+	}
+	defer g.Close()
+
+	g.Cursor = true
+
+	g.SetManagerFunc(layout)
+
+	if err := keybindingsCui(g); err != nil {
+		panic(err)
+	}
+
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+		panic(err)
+	}
 }
