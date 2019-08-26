@@ -143,8 +143,7 @@ func (c *Client) constructAPIRequestURL(endpoint string) (apiReqURL string) {
 
 // layout func for gocui
 func layout(g *gocui.Gui) error {
-	maxX, maxY := g.Size()
-	fmt.Printf("maxes: (%v, %v)", maxX, maxY)
+	_, maxY := g.Size()
 	if v, err := g.SetView("shows", -1, -1, 50, maxY); err != nil {
 		if err != gocui.ErrUnknownView {
 			return err
@@ -168,6 +167,18 @@ func keybindingsCui(g *gocui.Gui) error {
 		return err
 	}
 	return nil
+}
+
+func createLoadingView(g *gocui.Gui) error {
+	tw, th := g.Size()
+	v, err := g.SetView("LOADING_VIEW", tw/6, (th/2)-1, (tw*5)/6, (th/2)+1)
+	if err != nil && err != gocui.ErrUnknownView {
+		return err
+	}
+	v.Wrap = true
+	fmt.Fprintf(v, "Loading...")
+	_, err = g.SetCurrentView("LOADING_VIEW")
+	return err
 }
 
 // quit func for gocui
@@ -204,6 +215,14 @@ func main() {
 	g.Cursor = true
 
 	g.SetManagerFunc(layout)
+	if err := createLoadingView(g); err != nil {
+		panic(err)
+	}
+
+	/* _, err = g.SetViewOnTop("LOADING_VIEW")
+	if err != nil {
+		panic(err)
+	} */
 
 	if err := keybindingsCui(g); err != nil {
 		panic(err)
